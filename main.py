@@ -14,7 +14,15 @@ none_image = ImageTk.PhotoImage(Image.open("pictures/pices/none.png"))
 pawn_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_pawn.png"))
 pawn_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_pawn.png"))
 king_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_king.png"))
-king_image_black =ImageTk.PhotoImage(Image.open("pictures/pices/black_king.png"))
+king_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_king.png"))
+queen_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_queen.png"))
+queen_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_queen.png"))
+bishop_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_bishop.png"))
+bishop_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_bishop.png"))
+knight_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_knight.png"))
+knight_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_knight.png"))
+rook_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_rook.png"))
+rook_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_rook.png"))
 board_column = "abcdefgh"
 board_data = dict()
 
@@ -51,7 +59,7 @@ class Board:
 
                 # print(my_image)
                 # print(data[1])
-                #img=data[1]
+                # img=data[1]
                 self.board_data[f"{column}{9 - row}"] = [
                     tk.Button(root, height=height, width=width, bg=color, image=data[1],
                               command=lambda slot=f"{column}{9 - row}": self.select(slot)), data[0]]
@@ -67,10 +75,31 @@ class Board:
             return [None, pawn_image_white]
         elif row == 2:
             return [None, pawn_image_black]
-        elif row ==8:
-            return [None, king_image_white]
-        elif row ==1:
-            return [None, king_image_black]
+        elif row == 8:
+            if column == "e":
+                return [None, king_image_white]
+            if column == "d":
+                return [None, queen_image_white]
+            if column == "c" or column == "f":
+                return [None, bishop_image_white]
+            if column == "b" or column == "g":
+                return [None, knight_image_white]
+            if column == "a" or column == "h":
+                return [None, rook_image_white]
+            return [None, none_image]
+
+        elif row == 1:
+            if column == "e":
+                return [None, king_image_black]
+            if column == "d":
+                return [None, queen_image_black]
+            if column == "c" or column == "f":
+                return [None, bishop_image_black]
+            if column == "b" or column == "g":
+                return [None, knight_image_black]
+            if column == "a" or column == "h":
+                return [None, rook_image_black]
+            return [None, none_image]
 
 
 ##################################
@@ -85,6 +114,7 @@ class Piece:
         self.range = range
         self.possible_movements_list = list()
         self.image = ""
+        self.first_move = True
         # ImageTk.PhotoImage(Image.open("pictures/Test.png"))
 
     def possible_movements(self):
@@ -214,14 +244,54 @@ class Piece:
                     np = False
         return possible_diagonal_movements
 
+    def pawn_movement(self):
+        possible_pawn_list = list()
+        forward = True
+        if self.first_move:
+            if forward:
+                for r in range(1, 3):
+                    if main_board.board_data[f"{self.location[0]}{int(self.location[1]) + r}"][1] is None:
+                        possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + r}")
+                    else:
+                        forward = False
+            if board_column.fine(self.location[0]) + 1 <= 8:
+                if main_board.board_data[
+                    f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
+                    1].white is not self.white:
+                    possible_pawn_list.append(
+                        f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}")
+            if board_column.fine(self.location[0]) - 1 >= 0:
+                if main_board.board_data[
+                    f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
+                    1].white is not self.white:
+                    possible_pawn_list.append(
+                        f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+        else:
+
+            if main_board.board_data[f"{self.location[0]}{int(self.location[1]) + 1}"][1] is None:
+                possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + 1}")
+
+            if board_column.fine(self.location[0]) + 1 <= 8:
+                if main_board.board_data[
+                    f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
+                    1].white is not self.white:
+                    possible_pawn_list.append(
+                        f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}")
+            if board_column.fine(self.location[0]) - 1 >= 0:
+                if main_board.board_data[
+                    f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
+                    1].white is not self.white:
+                    possible_pawn_list.append(
+                        f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+
 
 class Queen(Piece):
     def __init__(self, white, location, range=9):
         super().__init__(white, location, range)
         if self.white:
-            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_queen.png"))
+            self.image = queen_image_white
         else:
-            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_queen.png"))
+            self.image = queen_image_black
 
     def possible_movements(self):
         self.possible_movements_list += self.diagonal()
@@ -232,15 +302,23 @@ class King(Piece):
     def __init__(self, white, location, range=1):
         super().__init__(white, location, range)
         if self.white:
-            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_king.png"))
+            self.image = king_image_white
         else:
-            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_king.png"))
+            self.image = king_image_black
 
     def possible_movements(self):
         self.possible_movements_list += self.diagonal()
         self.possible_movements_list += self.cross()
 
-
+class Pawn(Piece):
+    def __init__(self, white, location, range=1):
+        super().__init__(white, location, range)
+        if self.white:
+            self.image = pawn_image_white
+        else:
+            self.image = pawn_image_black
+    def possible_movements(self):
+        self.pawn_movement()
 main_board = Board()
 white_queen = Queen(True, "a3")
 white_queen1 = Queen(True, "c5")
