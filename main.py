@@ -5,11 +5,16 @@ from PIL import Image, ImageTk
 #################################################
 #               Initial data                    #
 #################################################
-height = 50
-width = 50
+height = 70
+width = 70
 root = tk.Tk()
 root.title("Chess")
 my_image = ImageTk.PhotoImage(Image.open("pictures/Test.png"))
+none_image = ImageTk.PhotoImage(Image.open("pictures/pices/none.png"))
+pawn_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_pawn.png"))
+pawn_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_pawn.png"))
+king_image_white = ImageTk.PhotoImage(Image.open("pictures/pices/white_king.png"))
+king_image_black =ImageTk.PhotoImage(Image.open("pictures/pices/black_king.png"))
 board_column = "abcdefgh"
 board_data = dict()
 
@@ -21,6 +26,7 @@ class Board:
     def __init__(self):
         self.board_data = dict()
         self.board_legend = dict()
+        self.my_image = ""
         ###############
         #   legends
         ##############
@@ -41,13 +47,30 @@ class Board:
                     color = "gray" if board_column.index(column) % 2 == 0 else "white"
                 else:
                     color = "white" if board_column.index(column) % 2 == 0 else "gray"
+                data = self.contributor(row, column)
+
+                # print(my_image)
+                # print(data[1])
+                #img=data[1]
                 self.board_data[f"{column}{9 - row}"] = [
-                    tk.Button(root, height=height, width=width, bg=color, image=my_image,
-                              command=lambda slot=f"{column}{9 - row}": self.select(slot)), None]
+                    tk.Button(root, height=height, width=width, bg=color, image=data[1],
+                              command=lambda slot=f"{column}{9 - row}": self.select(slot)), data[0]]
                 self.board_data[f"{column}{9 - row}"][0].grid(row=row, column=board_column.index(column) + 1)
 
     def select(self, slot):
         self.board_data[slot][0].configure(bg="red")
+
+    def contributor(self, row, column):
+        if row in [3, 4, 5, 6]:
+            return [None, none_image]
+        elif row == 7:
+            return [None, pawn_image_white]
+        elif row == 2:
+            return [None, pawn_image_black]
+        elif row ==8:
+            return [None, king_image_white]
+        elif row ==1:
+            return [None, king_image_black]
 
 
 ##################################
@@ -61,8 +84,9 @@ class Piece:
         self.activated = True
         self.range = range
         self.possible_movements_list = list()
-        self.image=""
-        #ImageTk.PhotoImage(Image.open("pictures/Test.png"))
+        self.image = ""
+        # ImageTk.PhotoImage(Image.open("pictures/Test.png"))
+
     def possible_movements(self):
         pass
 
@@ -191,19 +215,35 @@ class Piece:
         return possible_diagonal_movements
 
 
-class Full(Piece):
+class Queen(Piece):
+    def __init__(self, white, location, range=9):
+        super().__init__(white, location, range)
+        if self.white:
+            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_queen.png"))
+        else:
+            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_queen.png"))
+
     def possible_movements(self):
         self.possible_movements_list += self.diagonal()
         self.possible_movements_list += self.cross()
-        #return self.possible_movements_list
 
 
+class King(Piece):
+    def __init__(self, white, location, range=1):
+        super().__init__(white, location, range)
+        if self.white:
+            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_king.png"))
+        else:
+            self.image = ImageTk.PhotoImage(Image.open("pictures/pices/white_king.png"))
 
+    def possible_movements(self):
+        self.possible_movements_list += self.diagonal()
+        self.possible_movements_list += self.cross()
 
 
 main_board = Board()
-white_queen = Full(True, "a3")
-white_queen1 = Full(True, "c5")
+white_queen = Queen(True, "a3")
+white_queen1 = Queen(True, "c5")
 main_board.board_data["c5"][1] = white_queen1
 # white_queen.range = 10
 print(white_queen.possible_movements())
