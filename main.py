@@ -67,39 +67,48 @@ class Board:
 
     def select(self, slot):
         self.board_data[slot][0].configure(bg="red")
+        # print(self.board_data[slot][0])
+        if self.board_data[slot][1] is not None:
+            if self.board_data[slot][1].possible_movements() is not None:
+                for p in self.board_data[slot][1].possible_movements():
+                    self.board_data[p][0].configure(bg="yellow")
+        # print(self.board_data[slot][1].possible_movements())
 
     def contributor(self, row, column):
         if row in [3, 4, 5, 6]:
             return [None, none_image]
         elif row == 7:
-            return [None, pawn_image_white]
+            # print(f"{column}{row}")
+            return [Pawn(True, f"{column}{9 - row}"), pawn_image_white]
+            #return [None, pawn_image_white]
         elif row == 2:
-            return [None, pawn_image_black]
+            return [Pawn(False, f"{column}{9 - row}"), pawn_image_black]
+            #return [None, pawn_image_black]
         elif row == 8:
             if column == "e":
-                return [None, king_image_white]
+                return [King(True, f"{column}{9 - row}"), king_image_white]
             if column == "d":
-                return [None, queen_image_white]
+                return [Queen(True, f"{column}{9 - row}"), queen_image_white]
             if column == "c" or column == "f":
-                return [None, bishop_image_white]
+                return [Bishop(True, f"{column}{9 - row}"), bishop_image_white]
             if column == "b" or column == "g":
-                return [None, knight_image_white]
+                return [Knight(True, f"{column}{9 - row}"), knight_image_white]
             if column == "a" or column == "h":
-                return [None, rook_image_white]
-            return [None, none_image]
+                return [Rook(True, f"{column}{9 - row}"), rook_image_white]
+            # return [None, none_image]
 
         elif row == 1:
             if column == "e":
-                return [None, king_image_black]
+                return [King(False, f"{column}{9 - row}"), king_image_black]
             if column == "d":
-                return [None, queen_image_black]
+                return [Queen(False, f"{column}{9 - row}"), queen_image_black]
             if column == "c" or column == "f":
-                return [None, bishop_image_black]
+                return [Bishop(True, f"{column}{9 - row}"), bishop_image_black]
             if column == "b" or column == "g":
-                return [None, knight_image_black]
+                return [Knight(False, f"{column}{9 - row}"), knight_image_black]
             if column == "a" or column == "h":
-                return [None, rook_image_black]
-            return [None, none_image]
+                return [Rook(True, f"{column}{9 - row}"), rook_image_black]
+            # return [None, none_image]
 
 
 ##################################
@@ -134,24 +143,25 @@ class Piece:
                 S = True if int(self.location[1]) - changer > 0 else False
 
             if W:
+                column = board_column[board_column.find(self.location[0]) - changer]
+                row = self.location[1]
+                print(main_board.board_data[f"{column}{row}"][1])
+                if main_board.board_data[f"{column}{row}"][1] is None:
+                    cross_possible_movements.append(f"{column}{row}")
+                elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
+                    cross_possible_movements.append(f"{column}{row}")
+                    W = False
+                elif main_board.board_data[f"{column}{row}"][1].white is self.white:
+                    W = False
+            if E:
                 column = board_column[board_column.find(self.location[0]) + changer]
                 row = self.location[1]
                 if main_board.board_data[f"{column}{row}"][1] is None:
                     cross_possible_movements.append(f"{column}{row}")
                 elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
                     cross_possible_movements.append(f"{column}{row}")
-                    W = False
-                elif cross_possible_movements.append(f"{column}{row}").white is self.white:
-                    W = False
-            if E:
-                column = board_column[board_column.find(self.location[0]) - changer]
-                row = self.location[1]
-                if main_board.board_data[f"{column}{row}"][1] is None:
-                    cross_possible_movements.append(f"{column}{row}")
-                elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
-                    cross_possible_movements.append(f"{column}{row}")
                     E = False
-                elif cross_possible_movements.append(f"{column}{row}").white is self.white:
+                elif main_board.board_data[f"{column}{row}"][1].white is self.white:
                     E = False
 
             if N:
@@ -162,7 +172,7 @@ class Piece:
                 elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
                     cross_possible_movements.append(f"{column}{row}")
                     N = False
-                elif cross_possible_movements.append(f"{column}{row}").white is self.white:
+                elif main_board.board_data[f"{column}{row}"][1].white is self.white:
                     N = False
 
             if S:
@@ -173,7 +183,7 @@ class Piece:
                 elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
                     cross_possible_movements.append(f"{column}{row}")
                     S = False
-                elif cross_possible_movements.append(f"{column}{row}").white is self.white:
+                elif main_board.board_data[f"{column}{row}"][1].white is self.white:
                     S = False
 
         return cross_possible_movements
@@ -254,35 +264,80 @@ class Piece:
                         possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + r}")
                     else:
                         forward = False
-            if board_column.fine(self.location[0]) + 1 <= 8:
+            if board_column.find(self.location[0]) + 1 < 8:
                 if main_board.board_data[
-                    f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
+                    f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
+                    1] is None:
+                    pass
+                    # possible_pawn_list.append(
+                    # f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}")
+                elif main_board.board_data[
+                    f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
                     1].white is not self.white:
                     possible_pawn_list.append(
-                        f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}")
-            if board_column.fine(self.location[0]) - 1 >= 0:
+                        f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}")
+            if board_column.find(self.location[0]) - 1 >= 0:
                 if main_board.board_data[
-                    f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
+                    f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
+                    1] is None:
+                    pass
+                    # possible_pawn_list.append(
+                    # f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+                elif main_board.board_data[
+                    f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
                     1].white is not self.white:
                     possible_pawn_list.append(
-                        f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+                        f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}")
         else:
 
             if main_board.board_data[f"{self.location[0]}{int(self.location[1]) + 1}"][1] is None:
                 possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + 1}")
 
-            if board_column.fine(self.location[0]) + 1 <= 8:
+            if board_column.find(self.location[0]) + 1 <= 8:
                 if main_board.board_data[
-                    f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
+                    f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
+                    1] is None:
+                    pass
+                    # possible_pawn_list.append(
+                    # f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}")
+                elif main_board.board_data[
+                    f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
                     1].white is not self.white:
                     possible_pawn_list.append(
-                        f"{board_column[board_column.fine(self.location[0]) + 1]}{int(self.location[1]) + 1}")
-            if board_column.fine(self.location[0]) - 1 >= 0:
+                        f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}")
+            if board_column.find(self.location[0]) - 1 >= 0:
                 if main_board.board_data[
-                    f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
+                    f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
+                    1] is None:
+                    pass
+                    # possible_pawn_list.append(
+                    # f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+                elif main_board.board_data[
+                    f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}"][
                     1].white is not self.white:
                     possible_pawn_list.append(
-                        f"{board_column[board_column.fine(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+                        f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}")
+        return possible_pawn_list
+
+    def knight_movement(self):
+        possible_movements = list()
+        movement_patern = [[1, 2], [2, 1], [-1, 2], [-2, 1], [2, - 1], [1, -2], [-1, -2], [-2, -1]]
+        for move in movement_patern:
+            #print(self.location)
+            #print(move)
+            if board_column.find(self.location[0]) + move[0] >= 0 and board_column.find(self.location[0]) + move[
+                0] < 8 and int(self.location[1]) + move[1] > 0 and int(self.location[1]) + move[1] < 8:
+                if main_board.board_data[
+                    f"{board_column[board_column.find(self.location[0]) + move[0]]}{int(self.location[1]) + move[1]}"][
+                    1] is None:
+                    possible_movements.append(
+                        f"{board_column[board_column.find(self.location[0]) + move[0]]}{int(self.location[1]) + move[1]}")
+                elif main_board.board_data[
+                    f"{board_column[board_column.find(self.location[0]) + move[0]]}{int(self.location[1]) + move[1]}"][
+                    1].white is not self.white:
+                    possible_movements.append(
+                        f"{board_column[board_column.find(self.location[0]) + move[0]]}{int(self.location[1]) + move[1]}")
+        return possible_movements
 
 
 class Queen(Piece):
@@ -294,10 +349,32 @@ class Queen(Piece):
             self.image = queen_image_black
 
     def possible_movements(self):
-        self.possible_movements_list += self.diagonal()
-        self.possible_movements_list += self.cross()
+        possible_movements_list = list()
+        possible_movements_list += self.diagonal()
+        possible_movements_list += self.cross()
+        return possible_movements_list
 
 
+class Rook(Piece):
+    def __init__(self, white, location, range=9):
+        super().__init__(white, location, range)
+        if self.white:
+            self.image = rook_image_white
+        else:
+            self.image = rook_image_black
+
+    def possible_movements(self):
+        return self.cross()
+class Bishop(Piece):
+    def __init__(self, white, location, range=9):
+        super().__init__(white, location, range)
+        if self.white:
+            self.image = bishop_image_white
+        else:
+            self.image = bishop_image_black
+
+    def possible_movements(self):
+        return self.diagonal()
 class King(Piece):
     def __init__(self, white, location, range=1):
         super().__init__(white, location, range)
@@ -307,8 +384,10 @@ class King(Piece):
             self.image = king_image_black
 
     def possible_movements(self):
-        self.possible_movements_list += self.diagonal()
-        self.possible_movements_list += self.cross()
+        possible_movements_list = list()
+        possible_movements_list += self.diagonal()
+        possible_movements_list += self.cross()
+        return possible_movements_list
 
 class Pawn(Piece):
     def __init__(self, white, location, range=1):
@@ -317,13 +396,28 @@ class Pawn(Piece):
             self.image = pawn_image_white
         else:
             self.image = pawn_image_black
+
     def possible_movements(self):
-        self.pawn_movement()
+        return self.pawn_movement()
+
+
+class Knight(Piece):
+    def __init__(self, white, location, range=9):
+        super().__init__(white, location, range)
+        if self.white:
+            self.image = knight_image_white
+        else:
+            self.image = knight_image_black
+
+    def possible_movements(self):
+        return self.knight_movement()
 main_board = Board()
-white_queen = Queen(True, "a3")
-white_queen1 = Queen(True, "c5")
-main_board.board_data["c5"][1] = white_queen1
+
+# print(main_board.board_data["a2"][1].location)
+# white_queen = Queen(True, "a3")
+# white_queen1 = Queen(True, "c5")
+# main_board.board_data["c5"][1] = white_queen1
 # white_queen.range = 10
-print(white_queen.possible_movements())
+# print(white_queen.possible_movements())
 # print(white_queen.possible_movements())
 root.mainloop()
