@@ -35,8 +35,8 @@ class Board:
         self.board_data = dict()
         self.board_legend = dict()
         self.my_image = ""
-        self.possible=list()
-        self.last_slot=None
+        self.possible = list()
+        self.last_slot = None
         ###############
         #   legends
         ##############
@@ -68,45 +68,48 @@ class Board:
                 self.board_data[f"{column}{9 - row}"][0].grid(row=row, column=board_column.index(column) + 1)
 
     def select(self, slot):
-        #print(main_board.board_data.keys())
+        #if self.board_data[slot][1] is not None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
+        # print(main_board.board_data.keys())
         for field in self.board_data.keys():
             if int(field[1]) % 2 == 0:
                 color = "white" if board_column.find(field[0]) % 2 == 0 else "gray"
             else:
                 color = "gray" if board_column.find(field[0]) % 2 == 0 else "white"
             self.board_data[field][0].configure(bg=color)
-        if self.possible is None:
+        if self.possible is None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
             self.board_data[slot][0].configure(bg="red")
             # print(self.board_data[slot][0])
             if self.board_data[slot][1] is not None:
-                if self.board_data[slot][1].possible_movements() is not None:
-                    self.possible=self.board_data[slot][1].possible_movements()
-                    for p in self.board_data[slot][1].possible_movements():
+                possible = self.board_data[slot][1].possible_movements()
+                if possible is not None:
+                    self.possible = possible
+                    for p in self.possible:
                         self.board_data[p][0].configure(bg="yellow")
-            self.last_slot=slot
-        if slot not in self.possible:
-            self.board_data[slot][0].configure(bg="red")
-            # print(self.board_data[slot][0])
-            if self.board_data[slot][1] is not None:
-                if self.board_data[slot][1].possible_movements() is not None:
-                    self.possible = self.board_data[slot][1].possible_movements()
-                    for p in self.board_data[slot][1].possible_movements():
-                        self.board_data[p][0].configure(bg="yellow")
-            self.last_slot=slot
+            self.last_slot = slot
+        if self.possible is not None and slot not in self.possible :
+            if self.board_data[slot][1] is not None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
+                self.board_data[slot][0].configure(bg="red")
+                if self.board_data[slot][1] is not None:
+                    possible = self.board_data[slot][1].possible_movements()
+                    if possible is not None:
+                        self.possible = possible
+                        for p in self.possible:
+                            self.board_data[p][0].configure(bg="yellow")
+                self.last_slot = slot
         else:
-            print(slot)
+            if self.possible is not None:
+                if self.board_data[slot][1] is not None:
+                    self.board_data[slot][1].activated = False
+                    self.board_data[slot][1].location = None
 
-            self.board_data[slot][1]=self.board_data[self.last_slot][1]
-            print(self.board_data[slot][1].location)
-            self.board_data[slot][1].update_location(slot)
-            print(self.board_data[slot][1].location)
-            self.board_data[slot][0].configure(image=self.board_data[slot][1].image)
-            self.board_data[self.last_slot][0].configure(image=none_image)
-            self.board_data[self.last_slot][1]= None
-            self.last_slot=None
-            self.possible=None
-
-        # print(self.board_data[slot][1].possible_movements())
+                self.board_data[slot][1] = self.board_data[self.last_slot][1]
+                self.board_data[slot][1].update_location(slot)
+                self.board_data[slot][0].configure(image=self.board_data[slot][1].image)
+                self.board_data[self.last_slot][0].configure(image=none_image)
+                self.board_data[self.last_slot][1] = None
+                self.last_slot = None
+                self.possible = None
+                Player.whos_turn_is_it().play()
 
     def contributor(self, row, column):
         if row in [3, 4, 5, 6]:
@@ -150,6 +153,8 @@ class Board:
 ##################################
 
 class Piece:
+    all_pieces = list()
+
     def __init__(self, white, location, range=9):
         self.white = white
         self.location = location
@@ -158,12 +163,14 @@ class Piece:
         self.possible_movements_list = list()
         self.image = ""
         self.first_move = True
+        Piece.all_pieces.append(self)
         # ImageTk.PhotoImage(Image.open("pictures/Test.png"))
 
-    def update_location(self,loc):
-        self.location=loc
+    def update_location(self, loc):
+        self.location = loc
         if self.first_move:
             self.first_move = False
+
     def possible_movements(self):
         pass
 
@@ -531,12 +538,23 @@ class Player:
         Player.players.append(self)
 
     def play(self):
+        #print(Player.players)
         self.turn = False
-        set(Player.players).discard(self).turn = True
+        x=set(Player.players)
+        x.discard(self)
+        x=list(x)
+        x[0].turn=True
+
+    @staticmethod
+    def whos_turn_is_it():
+        print(Player.players)
+        #print([x for x in Player.players if x.turn is True])
+        return [x for x in Player.players if x.turn is True][0]
 
 
 main_board = Board()
-
+player1=Player(True,False)
+player2=Player(False,False)
 # print(main_board.board_data["a2"][1].location)
 # white_queen = Queen(True, "a3")
 # white_queen1 = Queen(True, "c5")
