@@ -119,18 +119,7 @@ class Board:
     def assign_board(self):
         for row in range(1, 9):
             for column in board_column:
-                if row % 2 == 0:
-                    color = "gray" if board_column.index(column) % 2 == 0 else "white"
-                else:
-                    color = "white" if board_column.index(column) % 2 == 0 else "gray"
                 data = self.__assign(row, column)
-
-                # img=data[1]
-                # self.board_data[f"{column}{9 - row}"] = [
-                #     tk.Button(root, height=height, width=width, bg=color, image=data[1],
-                #               command=lambda slot=f"{column}{9 - row}": self.select(slot)), data[0]]
-                # self.board_data[f"{column}{9 - row}"][0].grid(row=row, column=board_column.index(column) + 1)
-
                 self.board_data[f"{column}{9 - row}"][0].configure(image=data[1])
                 self.board_data[f"{column}{9 - row}"][1] = data[0]
 
@@ -343,11 +332,14 @@ class Piece:
             if self.first_move:
                 if forward:
                     for r in range(1, 3):
-                        if main_board.board_data[f"{self.location[0]}{int(self.location[1]) + r}"][1] is None:
-                            possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + r}")
+                        if int(self.location[1]) + r < 8 and forward:
+                            if main_board.board_data[f"{self.location[0]}{int(self.location[1]) + r}"][1] is None:
+                                possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + r}")
+                            else:
+                                forward = False
                         else:
                             forward = False
-                if board_column.find(self.location[0]) + 1 < 8:
+                if board_column.find(self.location[0]) + 1 < 8 and int(self.location[1]) + 1 <= 8:
                     if main_board.board_data[
                         f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
                         1] is None:
@@ -373,10 +365,10 @@ class Piece:
                             f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}")
             else:
 
-                if main_board.board_data[f"{self.location[0]}{int(self.location[1]) + 1}"][1] is None:
+                if int(self.location[1]) + 1<8 and main_board.board_data[f"{self.location[0]}{int(self.location[1]) + 1}"][1] is None:
                     possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) + 1}")
 
-                if board_column.find(self.location[0]) + 1 <= 8:
+                if board_column.find(self.location[0]) + 1 < 8:
                     if main_board.board_data[
                         f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}"][
                         1] is None:
@@ -403,12 +395,17 @@ class Piece:
         else:
             if self.first_move:
                 if forward:
+
                     for r in range(1, 3):
-                        if main_board.board_data[f"{self.location[0]}{int(self.location[1]) - r}"][1] is None:
-                            possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) - r}")
+                        if int(self.location[1])  - r >= 0 and forward:
+                            if main_board.board_data[f"{self.location[0]}{int(self.location[1]) - r}"][1] is None:
+                                possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) - r}")
+                            else:
+                                forward = False
                         else:
                             forward = False
-                if board_column.find(self.location[0]) - 1 >= 0:
+                            ###########################################################################################
+                if board_column.find(self.location[0]) - 1 >= 0 and int(self.location[1]) - 1 > 0:
                     if main_board.board_data[
                         f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) - 1}"][
                         1] is None:
@@ -416,28 +413,29 @@ class Piece:
                         # possible_pawn_list.append(
                         # f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) + 1}")
                     elif main_board.board_data[
-                        f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) - 1}"][
+                        f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) - 1}"][
                         1].white is not self.white:
                         possible_pawn_list.append(
-                            f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) - 1}")
-                if board_column.find(self.location[0]) - 1 >= 0:
+                            f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) - 1}")
+                if board_column.find(self.location[0]) + 1 < 8 and int(self.location[1]) - 1 > 0:
+                    #print(self.location[0],int(self.location[1])-1)
                     if main_board.board_data[
-                        f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) - 1}"][
+                        f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) - 1}"][
                         1] is None:
                         pass
                         # possible_pawn_list.append(
                         # f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) + 1}")
                     elif main_board.board_data[
-                        f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) - 1}"][
+                        f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) - 1}"][
                         1].white is not self.white:
                         possible_pawn_list.append(
-                            f"{board_column[board_column.find(self.location[0]) - 1]}{int(self.location[1]) - 1}")
+                            f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) - 1}")
             else:
-
-                if main_board.board_data[f"{self.location[0]}{int(self.location[1]) - 1}"][1] is None:
+                ###########################
+                if int(self.location[1]) - 1>=0 and main_board.board_data[f"{self.location[0]}{int(self.location[1]) - 1}"][1] is None:
                     possible_pawn_list.append(f"{self.location[0]}{int(self.location[1]) - 1}")
 
-                if board_column.find(self.location[0]) + 1 <= 8:
+                if board_column.find(self.location[0]) + 1 < 8:
                     if main_board.board_data[
                         f"{board_column[board_column.find(self.location[0]) + 1]}{int(self.location[1]) - 1}"][
                         1] is None:
@@ -634,9 +632,9 @@ player2 = Player(False, False)
 ###############################
 label_pics = list()
 row = 0
-column=0
+column = 0
 for x in range(32):
-    if x > 6:
+    if row > 6:
         column += 1
         row = 0
     label_pics.append(tk.Label())
@@ -648,16 +646,16 @@ def show_dicativated():
     row = 0
     column = 0
     x = 0
-    mm=[z for z in Piece.diactivated_pieces if not z.activated]
-    #print(mm)
+    mm = [z for z in Piece.diactivated_pieces if not z.activated]
+    # print(mm)
     for _ in range(32):
         label_pics[_].configure(image="")
     for kk in range(len(mm)):
         if row > 6:
             column += 1
             row = 0
-        #if not pic.activated:
-            # label_pics.append(tk.Label(image=pic.image))
+        # if not pic.activated:
+        # label_pics.append(tk.Label(image=pic.image))
         label_pics[x].configure(image=mm[kk].image)
         x += 1
         row += 1
