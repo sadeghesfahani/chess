@@ -1,6 +1,7 @@
 import abc
 import tkinter as tk
 from PIL import Image, ImageTk
+import copy
 
 #################################################
 #               Initial data                    #
@@ -39,6 +40,7 @@ class Board:
         self.my_image = ""
         self.possible = list()
         self.last_slot = None
+        self.checkpoint = dict()
         ###############
         #   legends
         ##############
@@ -61,9 +63,6 @@ class Board:
                     color = "white" if board_column.index(column) % 2 == 0 else "gray"
                 data = self.contributor(row, column)
 
-                # print(my_image)
-                # print(data[1])
-                # img=data[1]
                 self.board_data[f"{column}{9 - row}"] = [
                     tk.Button(root, height=height, width=width, bg=color, image=data[1],
                               command=lambda slot=f"{column}{9 - row}": self.select(slot)), data[0]]
@@ -71,16 +70,17 @@ class Board:
 
     def select(self, slot):
         # if self.board_data[slot][1] is not None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
-        # print(main_board.board_data.keys())
+
         for field in self.board_data.keys():
             if int(field[1]) % 2 == 0:
                 color = "white" if board_column.find(field[0]) % 2 == 0 else "gray"
             else:
                 color = "gray" if board_column.find(field[0]) % 2 == 0 else "white"
             self.board_data[field][0].configure(bg=color)
-        if self.possible is None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
+        if self.possible is None and self.board_data[slot][1] is not None and self.board_data[slot][
+            1].white == Player.whos_turn_is_it().white:
             self.board_data[slot][0].configure(bg="red")
-            # print(self.board_data[slot][0])
+
             if self.board_data[slot][1] is not None:
                 possible = self.board_data[slot][1].possible_movements()
                 if possible is not None:
@@ -102,9 +102,9 @@ class Board:
         else:
             if self.possible is not None:
                 if self.board_data[slot][1] is not None:
+                    self.board_data[slot][1].activated = False
                     Piece.diactivated_pieces.append(self.board_data[slot][1])
                     show_dicativated()
-                    self.board_data[slot][1].activated = False
                     self.board_data[slot][1].location = None
 
                 self.board_data[slot][1] = self.board_data[self.last_slot][1]
@@ -116,11 +116,38 @@ class Board:
                 self.possible = None
                 Player.whos_turn_is_it().play()
 
+    def assign_board(self):
+        for row in range(1, 9):
+            for column in board_column:
+                if row % 2 == 0:
+                    color = "gray" if board_column.index(column) % 2 == 0 else "white"
+                else:
+                    color = "white" if board_column.index(column) % 2 == 0 else "gray"
+                data = self.__assign(row, column)
+
+                # img=data[1]
+                # self.board_data[f"{column}{9 - row}"] = [
+                #     tk.Button(root, height=height, width=width, bg=color, image=data[1],
+                #               command=lambda slot=f"{column}{9 - row}": self.select(slot)), data[0]]
+                # self.board_data[f"{column}{9 - row}"][0].grid(row=row, column=board_column.index(column) + 1)
+
+                self.board_data[f"{column}{9 - row}"][0].configure(image=data[1])
+                self.board_data[f"{column}{9 - row}"][1] = data[0]
+
+    def __assign(self, row, column):
+        pieces = [x for x in Piece.all_pieces if x.activated]
+
+        for pic in pieces:
+
+            if str(pic.location[1]) == str(9 - row) and pic.location[0] == column:
+                return [pic, pic.image]
+        return [None, none_image]
+
     def contributor(self, row, column):
         if row in [3, 4, 5, 6]:
             return [None, none_image]
         elif row == 7:
-            # print(f"{column}{row}")
+
             return [Pawn(True, f"{column}{9 - row}"), pawn_image_white]
             # return [None, pawn_image_white]
         elif row == 2:
@@ -169,6 +196,9 @@ class Piece:
         self.possible_movements_list = list()
         self.image = ""
         self.first_move = True
+        self.king = False
+        self.type = None
+        self.checkpoint = dict()
         Piece.all_pieces.append(self)
         # ImageTk.PhotoImage(Image.open("pictures/Test.png"))
 
@@ -196,7 +226,7 @@ class Piece:
             if W:
                 column = board_column[board_column.find(self.location[0]) - changer]
                 row = self.location[1]
-                # print(main_board.board_data[f"{column}{row}"][1])
+
                 if main_board.board_data[f"{column}{row}"][1] is None:
                     cross_possible_movements.append(f"{column}{row}")
                 elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
@@ -205,7 +235,7 @@ class Piece:
                 elif main_board.board_data[f"{column}{row}"][1].white is self.white:
                     W = False
             if E:
-                # print(board_column.find(self.location[0]), changer)
+
                 column = board_column[board_column.find(self.location[0]) + changer]
                 row = self.location[1]
                 if main_board.board_data[f"{column}{row}"][1] is None:
@@ -459,6 +489,7 @@ class Queen(Piece):
             self.image = queen_image_white
         else:
             self.image = queen_image_black
+        self.type = "queen"
 
     def possible_movements(self):
         possible_movements_list = list()
@@ -474,6 +505,7 @@ class Rook(Piece):
             self.image = rook_image_white
         else:
             self.image = rook_image_black
+        self.type = "rook"
 
     def possible_movements(self):
         return self.cross()
@@ -486,6 +518,7 @@ class Bishop(Piece):
             self.image = bishop_image_white
         else:
             self.image = bishop_image_black
+        self.type = "bishop"
 
     def possible_movements(self):
         return self.diagonal()
@@ -498,6 +531,8 @@ class King(Piece):
             self.image = king_image_white
         else:
             self.image = king_image_black
+        self.king = True
+        self.type = "king"
 
     def possible_movements(self):
         possible_movements_list = list()
@@ -513,6 +548,7 @@ class Pawn(Piece):
             self.image = pawn_image_white
         else:
             self.image = pawn_image_black
+        self.type = "pawn"
 
     def possible_movements(self):
         return self.pawn_movement()
@@ -525,6 +561,7 @@ class Knight(Piece):
             self.image = knight_image_white
         else:
             self.image = knight_image_black
+        self.type = "knight"
 
     def possible_movements(self):
         return self.knight_movement()
@@ -553,30 +590,120 @@ class Player:
         else:
             status.configure(text="Player turn: Black")
 
+        active_white_pices = [x for x in Piece.all_pieces if x.activated and x.white]
+        king_white_pices = [x for x in Piece.all_pieces if x.king and x.white]
+        active_black_pices = [x for x in Piece.all_pieces if x.activated and not x.white]
+        king_black_pices = [x for x in Piece.all_pieces if x.king and not x.white]
+        white_possible_movements = list()
+        black_possible_movements = list()
+        for pic in active_white_pices:
+            white_possible_movements += pic.possible_movements()
+            white_possible_movements = list(set(white_possible_movements))
+            if king_black_pices[0].location in white_possible_movements:
+                main_board.board_data[king_black_pices[0].location][0].configure(bg="red")
+                board_backup = main_board.board_data
+                pass
+        for pic in active_black_pices:
+            black_possible_movements += pic.possible_movements()
+            black_possible_movements = list(set(black_possible_movements))
+            if king_white_pices[0].location in black_possible_movements:
+                main_board.board_data[king_white_pices[0].location][0].configure(bg="red")
+                pass
+
     @staticmethod
     def whos_turn_is_it():
 
         return [x for x in Player.players if x.turn is True][0]
+
+    @staticmethod
+    def make_turn(who):
+        who.turn = True
+
+        x = set(Player.players)
+        x.discard(who)
+        x = list(x)
+        x[0].turn = False
 
 
 main_board = Board()
 player1 = Player(True, False)
 player2 = Player(False, False)
 
+################################
+#   making diactivated labels
+###############################
+label_pics = list()
+row = 0
+column=0
+for x in range(32):
+    if x > 6:
+        column += 1
+        row = 0
+    label_pics.append(tk.Label())
+    label_pics[x].grid(row=row + 1, column=50 + column)
+    row += 1
+
 
 def show_dicativated():
-    label_pics = list()
     row = 0
     column = 0
     x = 0
-    for pic in Piece.diactivated_pieces:
+    mm=[z for z in Piece.diactivated_pieces if not z.activated]
+    #print(mm)
+    for _ in range(32):
+        label_pics[_].configure(image="")
+    for kk in range(len(mm)):
         if row > 6:
             column += 1
             row = 0
-        label_pics.append(tk.Label(image=pic.image))
-        label_pics[x].grid(row=row + 1, column=50 + column)
+        #if not pic.activated:
+            # label_pics.append(tk.Label(image=pic.image))
+        label_pics[x].configure(image=mm[kk].image)
         x += 1
         row += 1
 
 
+class Checkpoint:
+    checkpoints = list()
+
+    def __init__(self, name):
+        self.name = name
+        for pic in Piece.all_pieces:
+            pic.checkpoint[self] = [pic.location, pic.activated, pic.first_move, Piece.diactivated_pieces.copy()]
+        main_board.checkpoint[self] = [main_board.possible, main_board.last_slot]
+        Checkpoint.checkpoints.append(self)
+        self.player = Player.whos_turn_is_it()
+        self.deactivated = Piece.diactivated_pieces.copy()
+
+    def load_checkpoint(self, name):
+        check = [x for x in Checkpoint.checkpoints if x.name == name][0]
+        for pic in Piece.all_pieces:
+            pic.location = pic.checkpoint[check][0]
+            pic.activated = pic.checkpoint[check][1]
+            pic.first_move = pic.checkpoint[check][2]
+        Piece.diactivated_pieces = self.deactivated
+
+        main_board.possible = main_board.checkpoint[check][0]
+        main_board.last_slot = main_board.checkpoint[check][1]
+        main_board.assign_board()
+        Player.make_turn(self.player)
+        # Piece= self.deactivated
+        show_dicativated()
+
+
+test_list = list()
+
+
+def creat_checkpoint(name):
+    test_list.append(Checkpoint(name))
+
+
+def load_cheakpoint(name):
+    test_list[0].load_checkpoint(name)
+
+
+button = tk.Button(root, text="save checkpoint", command=lambda name="test": creat_checkpoint(name))
+button1 = tk.Button(root, text="return to checkpoint", command=lambda name="test": load_cheakpoint(name))
+button.grid(row=2, column=50)
+button1.grid(row=3, column=50)
 root.mainloop()
