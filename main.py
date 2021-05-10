@@ -9,6 +9,8 @@ height = 70
 width = 70
 root = tk.Tk()
 root.title("Chess")
+status = tk.Label(root, text="White player turn:", bd=1, relief=tk.SUNKEN, anchor=tk.W)
+status.grid(row=225, column=0, sticky="we", columnspan=25)
 my_image = ImageTk.PhotoImage(Image.open("pictures/Test.png"))
 none_image = ImageTk.PhotoImage(Image.open("pictures/pices/none.png"))
 pawn_image_black = ImageTk.PhotoImage(Image.open("pictures/pices/black_pawn.png"))
@@ -68,7 +70,7 @@ class Board:
                 self.board_data[f"{column}{9 - row}"][0].grid(row=row, column=board_column.index(column) + 1)
 
     def select(self, slot):
-        #if self.board_data[slot][1] is not None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
+        # if self.board_data[slot][1] is not None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
         # print(main_board.board_data.keys())
         for field in self.board_data.keys():
             if int(field[1]) % 2 == 0:
@@ -86,8 +88,9 @@ class Board:
                     for p in self.possible:
                         self.board_data[p][0].configure(bg="yellow")
             self.last_slot = slot
-        if self.possible is not None and slot not in self.possible :
-            if self.board_data[slot][1] is not None and self.board_data[slot][1].white == Player.whos_turn_is_it().white:
+        if self.possible is not None and slot not in self.possible:
+            if self.board_data[slot][1] is not None and self.board_data[slot][
+                1].white == Player.whos_turn_is_it().white:
                 self.board_data[slot][0].configure(bg="red")
                 if self.board_data[slot][1] is not None:
                     possible = self.board_data[slot][1].possible_movements()
@@ -99,6 +102,8 @@ class Board:
         else:
             if self.possible is not None:
                 if self.board_data[slot][1] is not None:
+                    Piece.diactivated_pieces.append(self.board_data[slot][1])
+                    show_dicativated()
                     self.board_data[slot][1].activated = False
                     self.board_data[slot][1].location = None
 
@@ -154,6 +159,7 @@ class Board:
 
 class Piece:
     all_pieces = list()
+    diactivated_pieces = list()
 
     def __init__(self, white, location, range=9):
         self.white = white
@@ -190,7 +196,7 @@ class Piece:
             if W:
                 column = board_column[board_column.find(self.location[0]) - changer]
                 row = self.location[1]
-                print(main_board.board_data[f"{column}{row}"][1])
+                # print(main_board.board_data[f"{column}{row}"][1])
                 if main_board.board_data[f"{column}{row}"][1] is None:
                     cross_possible_movements.append(f"{column}{row}")
                 elif main_board.board_data[f"{column}{row}"][1].white is not self.white:
@@ -199,7 +205,7 @@ class Piece:
                 elif main_board.board_data[f"{column}{row}"][1].white is self.white:
                     W = False
             if E:
-                print(board_column.find(self.location[0]), changer)
+                # print(board_column.find(self.location[0]), changer)
                 column = board_column[board_column.find(self.location[0]) + changer]
                 row = self.location[1]
                 if main_board.board_data[f"{column}{row}"][1] is None:
@@ -431,8 +437,6 @@ class Piece:
         possible_movements = list()
         movement_patern = [[1, 2], [2, 1], [-1, 2], [-2, 1], [2, - 1], [1, -2], [-1, -2], [-2, -1]]
         for move in movement_patern:
-            # print(self.location)
-            # print(move)
             if board_column.find(self.location[0]) + move[0] >= 0 and board_column.find(self.location[0]) + move[
                 0] < 8 and int(self.location[1]) + move[1] > 0 and int(self.location[1]) + move[1] <= 8:
                 if main_board.board_data[
@@ -535,31 +539,44 @@ class Player:
         self.ai = ai
         if self.white:
             self.turn = True
+            status.configure(text="Player turn: White")
         Player.players.append(self)
 
     def play(self):
-        #print(Player.players)
         self.turn = False
-        x=set(Player.players)
+        x = set(Player.players)
         x.discard(self)
-        x=list(x)
-        x[0].turn=True
+        x = list(x)
+        x[0].turn = True
+        if x[0].white:
+            status.configure(text="Player turn: White")
+        else:
+            status.configure(text="Player turn: Black")
 
     @staticmethod
     def whos_turn_is_it():
-        print(Player.players)
-        #print([x for x in Player.players if x.turn is True])
+
         return [x for x in Player.players if x.turn is True][0]
 
 
 main_board = Board()
-player1=Player(True,False)
-player2=Player(False,False)
-# print(main_board.board_data["a2"][1].location)
-# white_queen = Queen(True, "a3")
-# white_queen1 = Queen(True, "c5")
-# main_board.board_data["c5"][1] = white_queen1
-# white_queen.range = 10
-# print(white_queen.possible_movements())
-# print(white_queen.possible_movements())
+player1 = Player(True, False)
+player2 = Player(False, False)
+
+
+def show_dicativated():
+    label_pics = list()
+    row = 0
+    column = 0
+    x = 0
+    for pic in Piece.diactivated_pieces:
+        if row > 6:
+            column += 1
+            row = 0
+        label_pics.append(tk.Label(image=pic.image))
+        label_pics[x].grid(row=row + 1, column=50 + column)
+        x += 1
+        row += 1
+
+
 root.mainloop()
